@@ -39,7 +39,7 @@ namespace stats {
       LOG(INFO) << "Container prepare: "
                 << "container_id[" << container_id.ShortDebugString() << "] "
                 << "container_config[" << container_config.ShortDebugString() << "]";
-      input_assigner->register_container(container_id, container_config.executorinfo());
+      input_assigner->register_container(container_id, container_config.executor_info());
       return None();
     }
 
