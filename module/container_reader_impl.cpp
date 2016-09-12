@@ -31,6 +31,10 @@ metrics::ContainerReaderImpl::ContainerReaderImpl(
     received_bytes(0),
     dropped_bytes(0) {
   LOG(INFO) << "Reader constructed for " << requested_endpoint.string();
+
+  fcntl(socket.native_handle(),
+        F_SETFD,
+        fcntl(socket.native_handle(), F_GETFD) | FD_CLOEXEC);
 }
 
 metrics::ContainerReaderImpl::~ContainerReaderImpl() {
@@ -67,19 +71,6 @@ Try<metrics::UDPEndpoint> metrics::ContainerReaderImpl::open() {
   if (ec) {
     std::ostringstream oss;
     oss << "Failed to open reader socket at endpoint[" << bind_endpoint << "]: " << ec;
-    return Try<metrics::UDPEndpoint>(Error(oss.str()));
-  }
-
-  // Enable SO_REUSEADDR: When mesos-agent is restarted, child processes such as
-  // mesos-logrotate-logger and mesos-executor wind up taking ownership of the socket, preventing us
-  // from recovering the socket after a mesos-agent restart (result: bind() => EADDRINUSE).
-  // Due to this behavior, SO_REUSEADDR is required for the agent to recover its own sockets.
-  // To verify that data wasn't being lost after a recovery, the author ran several 'test-sender'
-  // tasks and observed that 'loop_gauge' was incrementing without any skipped values.
-  socket.set_option(boost::asio::socket_base::reuse_address(true), ec);
-  if (ec) {
-    std::ostringstream oss;
-    oss << "Failed to set bind reader socket at endpoint[" << bind_endpoint << "]: " << ec;
     return Try<metrics::UDPEndpoint>(Error(oss.str()));
   }
 
