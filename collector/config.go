@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"flag"
@@ -9,34 +9,34 @@ import (
 )
 
 type MasterConfig struct {
-	Port  int    `yaml:"port, omitempty"`
-	Topic string `yaml:"metrics_topic, omitempty"`
+	Port  int    `yaml:"port,omitempty"`
+	Topic string `yaml:"metric_topic,omitempty"`
 }
 
 type AgentConfig struct {
-	Port  int    `yaml:"port, omitempty"`
-	Topic string `yaml:"metrics_topic, omitempty"`
+	Port  int    `yaml:"port,omitempty"`
+	Topic string `yaml:"metric_topic,omitempty"`
 }
 
-type ConfigFile struct {
+type CollectorConfig struct {
 	HttpProfiler  bool   `yaml:"http_profiler"`
 	KafkaProducer bool   `yaml:"kafka_producer"`
 	IpCommand     string `yaml:"ip_command"`
 	PollingPeriod int    `yaml:"polling_period"`
 
-	AgentConfig  AgentConfig  `yaml:"agent_config, omitempty"`
-	MasterConfig MasterConfig `yaml:"master_config, omitempty"`
+	AgentConfig  AgentConfig  `yaml:"agent_config,omitempty"`
+	MasterConfig MasterConfig `yaml:"master_config,omitempty"`
 
 	ConfigPath string
 	DCOSRole   string
 }
 
-func (c *ConfigFile) setFlags(fs *flag.FlagSet) {
+func (c *CollectorConfig) setFlags(fs *flag.FlagSet) {
 	fs.StringVar(&c.ConfigPath, "config", c.ConfigPath, "The path to the config file.")
 	fs.StringVar(&c.DCOSRole, "role", c.DCOSRole, "The DC/OS role this instance runs on.")
 }
 
-func (c *ConfigFile) loadConfig() error {
+func (c *CollectorConfig) loadConfig() error {
 	fmt.Printf("Loading config file from %s\n", c.ConfigPath)
 	fileByte, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
@@ -49,8 +49,8 @@ func (c *ConfigFile) loadConfig() error {
 	return nil
 }
 
-func defaultConfig() ConfigFile {
-	return ConfigFile{
+func defaultConfig() CollectorConfig {
+	return CollectorConfig{
 		HttpProfiler:  true,
 		KafkaProducer: true,
 		PollingPeriod: 15,
@@ -59,7 +59,7 @@ func defaultConfig() ConfigFile {
 	}
 }
 
-func parseArgsReturnConfig(args []string) (ConfigFile, error) {
+func ParseArgsReturnConfig(args []string) (CollectorConfig, error) {
 	c := defaultConfig()
 	thisFlagSet := flag.NewFlagSet("", flag.PanicOnError)
 	c.setFlags(thisFlagSet)
